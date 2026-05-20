@@ -1,0 +1,57 @@
+# DABF-Net model configs (two variants).
+#
+# Fixed defaults apply to both variants; variant blocks override width / depth /
+# basis-set size. These match the configs reported in the manuscript:
+#   dabf_s = w32_d2224_m8 (small / faster)
+#   dabf_l = w64_d2248_m12 (large / accuracy-focused)
+
+defaults:
+  img_channel: 3
+  num_classes: 1
+  lightweight: false
+  ffn_scale: 2
+  dropblock_prob: 0.1
+  dropblock_size: 7
+  lgag_kernel: 3
+  encoder_topk: [0, 0, 2, 4, 4]
+  decoder_topk: [4, 4, 2, 0, 0, 0, 0]
+  kba_low_rank_ratio: 0.35
+  kba_alpha_init: 0.6
+  kba_global_ratio: 0.5
+  use_lgag: true
+  use_pixelshuffle: true
+
+variants:
+  dabf_s:
+    description: "Small DABF-Net (width=32, depth=[2,2,2,4], middle=8). Released checkpoints use this variant."
+    width: 32
+    enc_blk_nums: [2, 2, 2, 4]
+    middle_blk_num: 8
+    encoder_nsets: [8, 8, 10, 14, 18]
+    decoder_nsets: [18, 14, 10, 8, 6, 4, 4]
+
+  dabf_l:
+    description: "Large DABF-Net (width=64, depth=[2,2,4,8], middle=12). Higher accuracy, slower."
+    width: 64
+    enc_blk_nums: [2, 2, 4, 8]
+    middle_blk_num: 12
+    encoder_nsets: [12, 12, 18, 24, 32]
+    decoder_nsets: [32, 24, 16, 12, 12, 10, 8]
+
+# Training hyperparameters (used by train.py)
+training:
+  epochs: 200
+  batch_size: 4
+  lr: 1.0e-4
+  weight_decay: 1.0e-4
+  min_lr: 1.0e-6
+  num_workers: 4
+  image_size: 256
+  scheduler: constant          # constant or cosine
+  supervision: mutation        # combinatorial multi-scale; "deep_supervision" for the ablation
+  supervision_ce_weight: 0.3
+  supervision_dice_weight: 0.7
+  boundary_loss_weight: 0.15
+  use_boundary_loss: true
+  pos_weight: 1.0
+  clip_grad: 1.0
